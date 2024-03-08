@@ -1,0 +1,35 @@
+name: Update Lambda Environment Variables
+
+on:
+  push:
+    branches: ["main"]
+
+env:
+  AWS_REGION: us-east-1
+  NEXT_NAME: webring_manager_next
+  PREV_NAME: webring_manager_prev
+  SITELIST: ./sitelist
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Update environment variable for next lambda
+        run: xargs -a $SITELIST | sed 's/ /, /g' | xargs -I{} aws lambda update-function-configuration --function-name $NEXT_NAME --environment "Variables={SITES='{}'}"
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update environment variable for prev lambda
+        run: xargs -a $SITELIST | sed 's/ /, /g' | xargs -I{} aws lambda update-function-configuration --function-name $PREV_NAME --environment "Variables={SITES='{}'}"
+        with:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
