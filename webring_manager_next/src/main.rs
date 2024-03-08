@@ -1,6 +1,6 @@
 use lambda_http::{
     http::{header::REFERER, StatusCode, Uri},
-    run, service_fn, Body, Error, Request, Response,
+    run, service_fn, Body, Error, Request, RequestExt, Response,
 };
 use tokio::io::AsyncBufReadExt;
 
@@ -29,16 +29,20 @@ async fn get_sites() -> Vec<String> {
 
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     let sites = get_sites().await;
-    let referer_index = if let Some(referrer_header_value) = event.headers().get(REFERER) {
-        let referer_string: Uri = referrer_header_value.to_str()?.parse()?;
-        let referer_host = referer_string.host().unwrap();
-        sites
-            .iter()
-            .position(|s| s.parse::<Uri>().unwrap().host().unwrap() == referer_host)
-            .unwrap_or_default() as isize
+    let referer = if let Some(referer_header_value) = event.headers().get(REFERER) {
+        let referer_string: Uri = referer_header_value.to_str()?.parse()?;
+        referer_string.host().unwrap().to_owned()
     } else {
-        0 as isize
+        event
+            .query_string_parameters()
+            .first("Referer")
+            .unwrap_or_default()
+            .to_owned()
     };
+    let referer_index = sites
+        .iter()
+        .position(|s| s.parse::<Uri>().unwrap().host().unwrap() == referer)
+        .unwrap_or_default() as isize;
 
     let next_index = (referer_index + 1).rem_euclid(sites.len() as isize) as usize;
     let next_site = sites.get(next_index).unwrap().to_owned();
