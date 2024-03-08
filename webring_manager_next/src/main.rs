@@ -2,16 +2,33 @@ use lambda_http::{
     http::{header::REFERER, StatusCode, Uri},
     run, service_fn, Body, Error, Request, Response,
 };
+use tokio::io::AsyncBufReadExt;
+
+async fn get_sites() -> Vec<String> {
+    let config = aws_config::load_from_env().await;
+    let client = aws_sdk_s3::Client::new(&config);
+
+    let response = client
+        .get_object()
+        .bucket("grantlemons.com")
+        .key("sites.txt")
+        .send()
+        .await
+        .unwrap();
+    let mut lines = response.body.into_async_read().lines();
+
+    let mut sites = Vec::new();
+    while let Some(line) = lines.next_line().await.unwrap() {
+        if !line.is_empty() {
+            sites.push(line)
+        }
+    }
+
+    sites
+}
 
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
-    let sites = [
-        "https://lukaswerner.com/",
-        "https://grantlemons.com/",
-        "https://elijahpotter.dev/",
-        "https://b-sharman.dev/",
-        "https://naed3r.xyz/",
-    ];
-
+    let sites = get_sites().await;
     let referer_index = if let Some(referrer_header_value) = event.headers().get(REFERER) {
         let referer_string: Uri = referrer_header_value.to_str()?.parse()?;
         let referer_host = referer_string.host().unwrap();
