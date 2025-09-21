@@ -6,7 +6,7 @@ use lambda_http::{
 fn get_sites() -> Vec<String> {
     std::env::var("SITES")
         .unwrap()
-        .split(",")
+        .split(", ")
         .map(|s| s.to_owned())
         .collect()
 }
