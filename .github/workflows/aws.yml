@@ -32,6 +32,6 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Update environment variable for next lambda
-        run: aws lambda update-function-configuration --function-name $NEXT_NAME --environment "Variables={SITES='$(xargs -a $SITELIST | sed 's/ /, /g')'}"
+        run: aws lambda update-function-configuration --function-name $NEXT_NAME --environment "Variables={SITES='$(xargs -a $SITELIST | sed 's/ /,/g')'}"
       - name: Update environment variable for prev lambda
-        run: aws lambda update-function-configuration --function-name $PREV_NAME --environment "Variables={SITES='$(xargs -a $SITELIST | sed 's/ /, /g')'}"
+        run: aws lambda update-function-configuration --function-name $PREV_NAME --environment "Variables={SITES='$(xargs -a $SITELIST | sed 's/ /,/g')'}"
