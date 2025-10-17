@@ -1,0 +1,53 @@
+name: Update Lambda Code
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - webring_manager_prev
+      - webring_manager_next
+      - .github/workflows/deploy.yml
+
+env:
+  AWS_REGION: us-east-1
+  NEXT_NAME: webring_manager_next
+  PREV_NAME: webring_manager_prev
+  SITELIST: ./sitelist
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-build-cache
+
+      - name: Release lambdas
+        run: |
+          pip install cargo-lambda
+          cargo lambda build --release --arm64
+          cargo lambda deploy $PREV_NAME
+          cargo lambda deploy $NEXT_NAME
+        env:
+          AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

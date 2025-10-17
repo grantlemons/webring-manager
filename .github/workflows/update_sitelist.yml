@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - sitelist
-      - .github/workflows/aws.yml
+      - .github/workflows/update_sitelist.yml
 
 env:
   AWS_REGION: us-east-1
