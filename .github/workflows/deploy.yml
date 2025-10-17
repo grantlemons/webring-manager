@@ -5,9 +5,9 @@ on:
     branches:
       - main
     paths:
-      - webring_manager_prev
-      - webring_manager_next
-      - webring
+      - webring_manager_prev/**
+      - webring_manager_next/**
+      - webring/**
       - .github/workflows/deploy.yml
 
 env:
