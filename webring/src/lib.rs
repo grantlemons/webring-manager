@@ -76,7 +76,16 @@ pub async fn build_response(site: Result<String, String>) -> Result<Response<Bod
         Ok(site) => Response::builder()
             .header("Location", &site)
             .status(StatusCode::SEE_OTHER)
-            .body(format!("Referring to {site}").into())
+            .body(
+                format!(
+                    "Referring to {site}\nFull site list: {:#?}",
+                    parse_sites(&sitelist())
+                        .iter()
+                        .map(|(_, h)| h)
+                        .collect::<Vec<_>>()
+                )
+                .into(),
+            )
             .unwrap(),
         Err(e) => Response::builder()
             .status(StatusCode::BAD_REQUEST)
