@@ -1,0 +1,10 @@
+[package]
+name = "webring"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+lambda_http = "0.17.0"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros"] }

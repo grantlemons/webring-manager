@@ -1,4 +1,4 @@
 [workspace]
 
 resolver = "2"
-members = ["webring_manager_next", "webring_manager_prev"]
+members = ["webring","webring_manager_next", "webring_manager_prev"]
