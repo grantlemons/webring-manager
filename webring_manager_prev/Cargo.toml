@@ -3,6 +3,13 @@ name = "webring_manager_prev"
 version = "0.1.0"
 edition = "2021"
 
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
 [dependencies]
 lambda_http = "0.10.0"
 tokio = { version = "1", features = ["macros"] }
