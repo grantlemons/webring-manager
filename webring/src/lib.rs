@@ -3,6 +3,7 @@ use lambda_http::{
     http::{StatusCode, Uri, header::REFERER},
     tower::BoxError,
 };
+use serde_json::json;
 
 pub fn sitelist() -> Vec<String> {
     std::env::var("SITES")
@@ -80,19 +81,24 @@ pub fn build_response(
         Ok(site) => Response::builder()
             .header("Location", &site)
             .status(StatusCode::SEE_OTHER)
-            .body(
-                format!(
-                    "Referring to {site}\nFull site list: {:#?}",
-                    parse_sites(sites)
+            .body(Body::Text(
+                json!({
+                    "next_site": site,
+                    "site_list": parse_sites(sites)
                         .iter()
-                        .map(|(_, h)| h)
+                        .map(|(_, s)| s)
                         .collect::<Vec<_>>()
-                )
-                .into(),
-            )?,
+                })
+                .to_string(),
+            ))?,
         Err(e) => Response::builder()
             .status(StatusCode::BAD_REQUEST)
-            .body(e.into())?,
+            .body(Body::Text(
+                json!({
+                    "error_message": e,
+                })
+                .to_string(),
+            ))?,
     })
 }
 

@@ -1090,6 +1090,7 @@ version = "0.1.0"
 dependencies = [
  "async-io",
  "lambda_http",
+ "serde_json",
 ]
 
 [[package]]
