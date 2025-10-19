@@ -1,0 +1,8 @@
+[package]
+name = "webring"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+lambda_http = "0.17.0"
+serde_json = "1.0.145"

@@ -1,0 +1,62 @@
+name: Update Lambda Code
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - webring_manager_prev/**
+      - webring_manager_next/**
+      - webring/**
+      - .github/workflows/deploy.yml
+
+env:
+  AWS_REGION: us-east-1
+  NEXT_NAME: webring_manager_next
+  PREV_NAME: webring_manager_prev
+  SITELIST: ./sitelist
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-build-cache
+          
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ vars.IAM_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Release lambdas
+        run: |
+          pip install cargo-lambda
+          cargo lambda build --release --arm64
+          cargo lambda deploy $PREV_NAME
+          cargo lambda deploy $NEXT_NAME
+
+      - name: Invalidate cloudfront cache
+        run: aws cloudfront create-invalidation --distribution-id E1K7F5YQJX538J --paths "/webring/*"
