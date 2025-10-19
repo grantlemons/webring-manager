@@ -98,6 +98,7 @@ pub async fn build_response(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use async_io::block_on;
     use lambda_http::http::Request;
 
     async fn abstraction(sites: &[String], referer: &str, location: &str) {
@@ -132,7 +133,7 @@ mod tests {
         .collect::<Vec<_>>();
 
         for w in sites.windows(2) {
-            smol::block_on(abstraction(&sites, &w[0], &w[1]))
+            block_on(abstraction(&sites, &w[0], &w[1]))
         }
     }
 
@@ -148,6 +149,6 @@ mod tests {
         .map(|s| s.to_string())
         .collect::<Vec<_>>();
 
-        smol::block_on(abstraction(&sites, &sites[3], &sites[1]))
+        block_on(abstraction(&sites, &sites[3], &sites[1]))
     }
 }

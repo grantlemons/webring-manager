@@ -11,6 +11,6 @@ panic = "abort"
 strip = true
 
 [dependencies]
+async-io = { version = "2.6.0", features = ["tracing"] }
 lambda_http = "0.17.0"
-smol = "2.0.2"
 webring = { path = "../webring/" }
