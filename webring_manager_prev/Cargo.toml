@@ -12,5 +12,5 @@ strip = true
 
 [dependencies]
 lambda_http = "0.17.0"
-tokio = { version = "1", features = ["macros"] }
+smol = "2.0.2"
 webring = { path = "../webring/" }

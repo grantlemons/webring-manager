@@ -1,14 +1,13 @@
 use lambda_http::{run, service_fn, tower::BoxError};
 use webring::*;
 
-#[tokio::main]
-async fn main() -> Result<(), BoxError> {
+fn main() -> Result<(), BoxError> {
     lambda_http::tracing::init_default_subscriber();
 
     let dec = |x| x - 1;
+    let sites = sitelist();
 
-    run(service_fn(|ev| {
-        build_response(calc_destination(extract_referrer(ev), &sitelist(), dec))
-    }))
-    .await
+    smol::block_on(run(service_fn(|ev| {
+        build_response(calc_destination(extract_referrer(ev), &sites, dec), &sites)
+    })))
 }

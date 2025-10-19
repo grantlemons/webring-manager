@@ -62,7 +62,7 @@ pub fn calc_destination<F: Fn(isize) -> isize>(
     let referer_index = hosts
         .iter()
         .position(|(h, _)| *h == referer)
-        .unwrap_or_default() as isize;
+        .ok_or("Referer not in hosts list!".to_owned())? as isize;
 
     let next_index = f(referer_index).rem_euclid(hosts.len() as isize) as usize;
     hosts
@@ -71,7 +71,10 @@ pub fn calc_destination<F: Fn(isize) -> isize>(
         .ok_or("No next site".to_owned())
 }
 
-pub async fn build_response(site: Result<String, String>) -> Result<Response<Body>, BoxError> {
+pub async fn build_response(
+    site: Result<String, String>,
+    sites: &[String],
+) -> Result<Response<Body>, BoxError> {
     Ok(match site {
         Ok(site) => Response::builder()
             .header("Location", &site)
@@ -79,18 +82,16 @@ pub async fn build_response(site: Result<String, String>) -> Result<Response<Bod
             .body(
                 format!(
                     "Referring to {site}\nFull site list: {:#?}",
-                    parse_sites(&sitelist())
+                    parse_sites(sites)
                         .iter()
                         .map(|(_, h)| h)
                         .collect::<Vec<_>>()
                 )
                 .into(),
-            )
-            .unwrap(),
+            )?,
         Err(e) => Response::builder()
             .status(StatusCode::BAD_REQUEST)
-            .body(e.into())
-            .unwrap(),
+            .body(e.into())?,
     })
 }
 
@@ -105,18 +106,21 @@ mod tests {
             .body("".into())
             .unwrap();
         assert_eq!(
-            build_response(calc_destination(extract_referrer(request), &sites, |x| x + 1))
-                .await
-                .unwrap()
-                .headers()
-                .get("Location")
-                .unwrap(),
+            build_response(
+                calc_destination(extract_referrer(request), &sites, |x| x + 1),
+                &sites
+            )
+            .await
+            .unwrap()
+            .headers()
+            .get("Location")
+            .unwrap(),
             location
         )
     }
 
-    #[tokio::test]
-    async fn windows() {
+    #[test]
+    fn windows() {
         let sites = [
             "https://lukaswerner.com/",
             "https://grantlemons.com/",
@@ -128,12 +132,12 @@ mod tests {
         .collect::<Vec<_>>();
 
         for w in sites.windows(2) {
-            abstraction(&sites, &w[0], &w[1]).await
+            smol::block_on(abstraction(&sites, &w[0], &w[1]))
         }
     }
 
-    #[tokio::test]
-    async fn bad_uri_filtered() {
+    #[test]
+    fn bad_uri_filtered() {
         let sites = [
             "https:/lukaswerner.com/",
             "https://grantlemons.com/",
@@ -144,6 +148,6 @@ mod tests {
         .map(|s| s.to_string())
         .collect::<Vec<_>>();
 
-        abstraction(&sites, &sites[3], &sites[1]).await
+        smol::block_on(abstraction(&sites, &sites[3], &sites[1]))
     }
 }
