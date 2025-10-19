@@ -52,3 +52,6 @@ jobs:
           AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Invalidate cloudfront cache
+        run: aws cloudfront create-invalidation --distribution-id E1K7F5YQJX538J --paths "/webring/*"
