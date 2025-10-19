@@ -72,7 +72,7 @@ pub fn calc_destination<F: Fn(isize) -> isize>(
         .ok_or("No next site".to_owned())
 }
 
-pub async fn build_response(
+pub fn build_response(
     site: Result<String, String>,
     sites: &[String],
 ) -> Result<Response<Body>, BoxError> {
@@ -99,10 +99,9 @@ pub async fn build_response(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use async_io::block_on;
     use lambda_http::http::Request;
 
-    async fn abstraction(sites: &[String], referer: &str, location: &str) {
+    fn abstraction(sites: &[String], referer: &str, location: &str) {
         let request = Request::builder()
             .header(REFERER, referer)
             .body("".into())
@@ -112,7 +111,6 @@ mod tests {
                 calc_destination(extract_referrer(request), &sites, |x| x + 1),
                 &sites
             )
-            .await
             .unwrap()
             .headers()
             .get("Location")
@@ -134,7 +132,7 @@ mod tests {
         .collect::<Vec<_>>();
 
         for w in sites.windows(2) {
-            block_on(abstraction(&sites, &w[0], &w[1]))
+            abstraction(&sites, &w[0], &w[1])
         }
     }
 
@@ -150,6 +148,6 @@ mod tests {
         .map(|s| s.to_string())
         .collect::<Vec<_>>();
 
-        block_on(abstraction(&sites, &sites[3], &sites[1]))
+        abstraction(&sites, &sites[3], &sites[1])
     }
 }

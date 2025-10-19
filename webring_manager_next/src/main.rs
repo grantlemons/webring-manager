@@ -9,7 +9,7 @@ fn main() -> Result<(), BoxError> {
     let inc = |x| x + 1;
     let sites = sitelist();
 
-    block_on(Compat::new(run(service_fn(|ev| {
+    block_on(Compat::new(run(service_fn(|ev| async {
         build_response(calc_destination(extract_referrer(ev), &sites, inc), &sites)
     }))))
 }
