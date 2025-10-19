@@ -12,5 +12,6 @@ strip = true
 
 [dependencies]
 async-io = { version = "2.6.0", features = ["tracing"] }
+async-compat = "0.2.5"
 lambda_http = "0.17.0"
 webring = { path = "../webring/" }
