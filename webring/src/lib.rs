@@ -31,9 +31,10 @@ fn parse_uri_host(s: impl Into<String>) -> Result<String, String> {
 }
 
 pub fn extract_referrer(req: Request) -> Result<String, String> {
-    let query_parameter_referer_host = req
-        .query_string_parameters()
+    let parameters = req.query_string_parameters();
+    let query_parameter_referer_host = parameters
         .first("Referer")
+        .or(parameters.first("referer"))
         .map(str::to_owned)
         .ok_or("No Referer query parameter".to_owned())
         .and_then(parse_uri_host);
