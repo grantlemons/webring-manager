@@ -61,9 +61,11 @@ pub fn calc_destination<F: Fn(isize) -> isize>(
 ) -> Result<String, String> {
     let referer = referer?;
     let hosts = parse_sites(sites);
+
+    let strip_www = |s: &String| s.replace("www.", "");
     let referer_index = hosts
         .iter()
-        .position(|(h, _)| *h == referer)
+        .position(|(h, _)| h == &referer || strip_www(h) == strip_www(&referer))
         .ok_or("Referer not in hosts list!".to_owned())? as isize;
 
     let next_index = f(referer_index).rem_euclid(hosts.len() as isize) as usize;
